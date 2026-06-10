@@ -3,6 +3,7 @@ import json
 from openai import OpenAI
 
 from app.config import settings
+from app.cost_tracker import RequestCostTracker
 from app.logger import get_logger
 
 logger = get_logger(__name__)
@@ -20,7 +21,7 @@ SYSTEM_PROMPT = (
 )
 
 
-def classify(query: str) -> dict:
+def classify(query: str, tracker: RequestCostTracker) -> dict:
     client = OpenAI(api_key=settings.openai_api_key)
     response = client.chat.completions.create(
         model=CLASSIFIER_MODEL,
@@ -51,6 +52,13 @@ def classify(query: str) -> dict:
     result["completion_tokens"] = usage.completion_tokens
     result["total_tokens"] = usage.total_tokens
     result["model"] = response.model
+
+    tracker.add_call(
+        model=result["model"],
+        prompt_tokens=result["prompt_tokens"],
+        completion_tokens=result["completion_tokens"],
+        call_type="classification",
+    )
 
     logger.info(
         "classification_done",

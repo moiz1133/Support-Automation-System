@@ -2,6 +2,7 @@ from openai import APIConnectionError, OpenAI, RateLimitError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.config import settings
+from app.cost_tracker import RequestCostTracker
 from app.logger import get_logger
 
 logger = get_logger(__name__)
@@ -24,7 +25,7 @@ def _create_chat_completion(client: OpenAI, **kwargs):
     return client.chat.completions.create(**kwargs)
 
 
-def generate_answer(query: str, chunks: list[dict]) -> dict:
+def generate_answer(query: str, chunks: list[dict], tracker: RequestCostTracker) -> dict:
     context = "\n\n".join(chunk["content"] for chunk in chunks)
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(context=context)
 
@@ -47,6 +48,13 @@ def generate_answer(query: str, chunks: list[dict]) -> dict:
         "total_tokens": usage.total_tokens,
         "model": response.model,
     }
+
+    tracker.add_call(
+        model=result["model"],
+        prompt_tokens=result["prompt_tokens"],
+        completion_tokens=result["completion_tokens"],
+        call_type="generation",
+    )
 
     logger.info(
         "llm_call_done",

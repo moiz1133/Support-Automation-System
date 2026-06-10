@@ -2,15 +2,24 @@ import chromadb
 from openai import OpenAI
 
 from app.config import settings
+from app.cost_tracker import RequestCostTracker
 from app.ingestion import EMBEDDING_MODEL
 from app.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-def retrieve(query: str, db_path: str, n_results: int = 3) -> list[dict]:
+def retrieve(query: str, db_path: str, tracker: RequestCostTracker, n_results: int = 3) -> list[dict]:
     openai_client = OpenAI(api_key=settings.openai_api_key)
-    embedding = openai_client.embeddings.create(model=EMBEDDING_MODEL, input=[query]).data[0].embedding
+    embedding_response = openai_client.embeddings.create(model=EMBEDDING_MODEL, input=[query])
+    embedding = embedding_response.data[0].embedding
+
+    tracker.add_call(
+        model=embedding_response.model,
+        prompt_tokens=embedding_response.usage.prompt_tokens,
+        completion_tokens=0,
+        call_type="embedding",
+    )
 
     client = chromadb.PersistentClient(path=db_path)
     collection = client.get_or_create_collection(name="support_docs")
