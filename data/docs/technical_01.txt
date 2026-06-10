@@ -1,0 +1,7 @@
+Title: How to Reset Your Password
+
+If you've forgotten your password or want to change it for security reasons, you can reset it from the login page. Click "Forgot Password?" below the login form, enter the email address associated with your account, and click "Send Reset Link." You will receive an email containing a secure link to reset your password.
+
+The reset link is valid for 60 minutes. After clicking it, you'll be prompted to enter a new password that meets our security requirements: at least 8 characters, including one uppercase letter, one number, and one special character. Once submitted, you'll be redirected to the login page to sign in with your new password.
+
+If you don't receive the reset email within a few minutes, check your spam or junk folder, and confirm that you're using the email address registered to your account. If you're logged in and simply want to change your password, go to Settings > Security > Change Password instead.

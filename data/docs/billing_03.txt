@@ -1,0 +1,7 @@
+Title: What Happens When a Payment Fails
+
+If a scheduled payment fails, our system will automatically retry the charge up to three times over a period of seven days. You will receive an email notification each time a payment attempt fails, along with instructions to update your payment method if needed.
+
+During this retry period, your account remains active and you will continue to have access to your subscription features. However, if all retry attempts fail and no valid payment method is provided, your account will be downgraded to a limited free tier or suspended, depending on your plan type. Any data associated with paid features may become read-only until payment is resolved.
+
+To avoid service interruption, update your payment method as soon as possible from Settings > Billing > Payment Methods. Once a valid payment is processed, your account will be restored to full functionality immediately, typically within a few minutes. Contact support if charges continue to fail after updating your card.

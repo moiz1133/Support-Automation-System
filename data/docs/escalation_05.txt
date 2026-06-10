@@ -1,0 +1,7 @@
+Title: How to Escalate an Unresolved Technical Issue
+
+If you've been working with support on a technical issue and it remains unresolved after multiple interactions, or if it is severely impacting your ability to use the platform, you can request escalation to a senior support engineer.
+
+To escalate, reply to your existing support ticket and include the phrase "requesting escalation," along with a summary of troubleshooting steps already attempted, how long the issue has persisted, and its business impact (e.g., number of users affected, revenue impact, deadlines). This information helps the escalation team prioritize and avoid repeating steps you've already tried.
+
+Escalated tickets are reviewed within 4 business hours and assigned to a senior engineer or technical account manager who will take ownership of the issue until resolution. For critical outages affecting production systems, customers on Business or Enterprise plans can also use the "Emergency Support" button in the dashboard to trigger an immediate page to the on-call engineering team, available 24/7.

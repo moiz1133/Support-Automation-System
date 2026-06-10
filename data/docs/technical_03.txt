@@ -1,0 +1,7 @@
+Title: How to Install the Desktop App on Windows
+
+Our desktop application provides offline access and faster performance compared to the browser version. To install it on Windows, visit the Downloads page from your account dashboard and click "Download for Windows" to obtain the installer (.exe file).
+
+Once the download completes, double-click the installer file to launch the setup wizard. You may see a Windows SmartScreen warning since the app is newly downloaded; click "More info" and then "Run anyway" to proceed. Follow the on-screen prompts, choosing your preferred installation directory, and click "Install."
+
+After installation finishes, launch the app from your Start menu or desktop shortcut and sign in using your existing account credentials. The desktop app requires Windows 10 or later (64-bit) and at least 4 GB of RAM. Updates are applied automatically when available, but you can manually check for updates from the Help menu within the app.

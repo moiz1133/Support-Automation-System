@@ -1,0 +1,7 @@
+Title: How to Report a Security Vulnerability
+
+We take the security of our platform seriously and encourage responsible disclosure of any vulnerabilities you discover. If you believe you have found a security issue, such as a way to bypass authentication, access another user's data, or execute unauthorized code, please report it immediately through our dedicated security channel rather than standard support.
+
+To report a vulnerability, email security@example.com with a detailed description of the issue, including steps to reproduce it, affected URLs or endpoints, and any relevant screenshots or proof-of-concept code. Do not attempt to exploit the vulnerability beyond what is necessary to demonstrate it, and do not access, modify, or delete data belonging to other users.
+
+Our security team will acknowledge your report within 24 hours and provide updates as the issue is investigated and resolved. Verified critical vulnerabilities may be eligible for a reward under our bug bounty program. This report will be treated as a priority escalation and routed directly to our security engineering team.

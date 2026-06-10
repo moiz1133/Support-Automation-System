@@ -1,0 +1,7 @@
+Title: How to Request a Refund
+
+Refund requests are evaluated on a case-by-case basis in accordance with our refund policy. If you believe you are eligible for a refund—for example, due to an accidental purchase, duplicate charge, or service issue—submit a request within 30 days of the charge date.
+
+To request a refund, go to Settings > Billing > Payment History, locate the charge in question, and click "Request Refund." Provide a brief explanation of the reason for your request. Our billing team typically reviews refund requests within 3-5 business days and will notify you by email once a decision has been made.
+
+Approved refunds are issued to the original payment method and may take 5-10 business days to appear on your statement, depending on your bank or card issuer. Subscription fees for partially used billing periods are generally non-refundable unless required by local consumer protection laws. For disputes regarding unauthorized charges, please use the dedicated dispute process instead.

@@ -1,0 +1,7 @@
+Title: How to Update Your Payment Method
+
+Keeping your payment method up to date ensures uninterrupted access to your account and prevents failed charges. To update your payment method, log in to your account and navigate to Settings > Billing > Payment Methods. From there, click "Add Payment Method" to enter a new credit card, debit card, or bank account, or click "Edit" next to an existing method to update its expiration date or billing address.
+
+Once added, you can set any payment method as the default by clicking "Make Default." Your default method will be used for all future charges, including subscription renewals. Removing a payment method is only possible if it is not currently set as default and you have no outstanding balance.
+
+If you encounter an error while saving a new card, double-check the card number, expiration date, and CVV, and confirm that your billing address matches the address on file with your card issuer. For further assistance, contact support.

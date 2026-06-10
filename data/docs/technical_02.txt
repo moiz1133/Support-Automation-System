@@ -1,0 +1,11 @@
+Title: How to Connect via API
+
+Our REST API allows you to programmatically access your account data and integrate our platform with your own tools. To get started, generate an API key from Settings > Developer > API Keys by clicking "Create New Key." Store this key securely, as it will only be shown once.
+
+All API requests must be authenticated using a Bearer token in the Authorization header. Here is a sample request to retrieve your account profile:
+
+curl -X GET "https://api.example.com/v1/account" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+
+The API uses standard HTTP status codes to indicate success or failure, and responses are returned in JSON format. Rate limits are set to 100 requests per minute per API key; exceeding this limit will result in a 429 status code. Full endpoint documentation, including available resources and parameters, is available in our Developer Portal under API Reference.

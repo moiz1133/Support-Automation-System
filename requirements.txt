@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+openai
+chromadb
+pydantic-settings
+python-json-logger
+python-dotenv

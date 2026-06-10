@@ -1,0 +1,7 @@
+Title: How to Delete Your Account
+
+Deleting your account is permanent and will remove all associated data, including your profile, files, settings, and billing history, after a 30-day grace period. Before proceeding, consider exporting any data you want to keep from Settings > Data > Export Data.
+
+To delete your account, navigate to Settings > Account > Delete Account. You'll be asked to confirm your password and provide a reason for leaving, which helps us improve our service. After confirming, your account will be deactivated immediately and scheduled for permanent deletion in 30 days.
+
+During the 30-day grace period, you can cancel the deletion by logging back in and clicking "Restore Account" on the notice that appears. After 30 days, deletion is irreversible and our support team cannot recover any data. If you have an active subscription, it will be canceled as part of the deletion process, but no automatic refunds are issued for unused time.

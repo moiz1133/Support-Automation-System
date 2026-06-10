@@ -1,0 +1,7 @@
+Title: How to Request Legal or Compliance Documentation
+
+Customers occasionally need formal documentation for legal, regulatory, or compliance purposes, such as data processing agreements (DPAs), security certifications (SOC 2, ISO 27001), GDPR compliance statements, or records of data deletion. These requests are handled by our Legal and Compliance team rather than general support.
+
+To request such documentation, submit a request through Settings > Support > Contact Us, and select "Legal/Compliance Request" as the category. Include your company's full legal name, the specific document(s) requested, and the purpose of the request (e.g., vendor security review, audit). Requests for executed agreements may require a signature from an authorized representative of your organization.
+
+This category of request is automatically escalated to our Legal team and may take 5-10 business days to fulfill, depending on the complexity and whether custom contract terms need review. For urgent requests tied to an active audit deadline, please indicate the deadline date in your request so it can be prioritized accordingly.

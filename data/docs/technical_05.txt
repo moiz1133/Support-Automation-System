@@ -1,0 +1,7 @@
+Title: How to Enable Two-Factor Authentication
+
+Two-factor authentication (2FA) adds an extra layer of security to your account by requiring a second verification step in addition to your password. We strongly recommend enabling 2FA, especially if your account contains billing information or sensitive data.
+
+To enable 2FA, go to Settings > Security > Two-Factor Authentication and click "Enable." You can choose between an authenticator app (such as Google Authenticator or Authy) or SMS-based verification. For authenticator apps, scan the displayed QR code with your app, then enter the 6-digit code it generates to confirm setup.
+
+Once enabled, you'll be prompted for a verification code each time you log in from a new or unrecognized device. You will also receive a set of backup codes—store these in a safe place, as they allow you to access your account if you lose your authentication device. To disable 2FA, navigate back to the Security settings and click "Disable," confirming with your password.

@@ -1,0 +1,7 @@
+Title: How to Change Your Username
+
+Your username is a unique identifier displayed on your profile and may be used in shared links or mentions, depending on the features you use. To change it, go to Settings > Account > Profile and locate the "Username" field.
+
+Enter your desired new username and click "Save." Usernames must be between 3 and 20 characters, can include letters, numbers, underscores, and hyphens, and must be unique across the platform. If your chosen username is already taken, you'll be prompted to select a different one.
+
+Please note that changing your username does not change your account's unique ID, so your account history, billing records, and data remain intact. However, any old links that referenced your previous username may no longer work. You can change your username up to once every 30 days to prevent impersonation and confusion among collaborators.

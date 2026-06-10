@@ -1,0 +1,7 @@
+Title: How to Manage Notification Preferences
+
+You can control which notifications you receive and how you receive them from Settings > Notifications. Notifications are organized into categories such as account activity, billing alerts, product updates, and marketing communications.
+
+For each category, you can choose to receive notifications via email, push notification (if you have the mobile or desktop app installed), both, or neither. Critical security notifications, such as password changes or new device logins, cannot be fully disabled to help protect your account, but you can choose to receive these via email only.
+
+To unsubscribe from marketing emails entirely, toggle off "Product News and Offers," or click the "Unsubscribe" link at the bottom of any marketing email. Changes to notification preferences take effect immediately, though you may continue to receive emails that were already queued for delivery before the change was saved.

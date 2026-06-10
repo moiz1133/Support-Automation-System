@@ -1,0 +1,7 @@
+Title: How to Cancel Your Subscription
+
+You can cancel your subscription at any time from your account dashboard. Go to Settings > Billing > Subscription, and click "Cancel Subscription." You will be asked to confirm your decision and may be offered an option to pause your subscription instead, which temporarily suspends billing without permanently closing your account.
+
+After cancellation, your subscription remains active until the end of the current billing period, and you will retain access to all paid features until that date. No further charges will be made after cancellation is confirmed. You will receive a confirmation email summarizing the cancellation date and any remaining access.
+
+If you cancel by mistake, you can reactivate your subscription before the current billing period ends by visiting the same Subscription page and clicking "Reactivate." Once a subscription has fully expired, you will need to resubscribe and may lose access to historical data depending on your plan's data retention policy.

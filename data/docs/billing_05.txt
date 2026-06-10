@@ -1,0 +1,7 @@
+Title: How to Download an Invoice
+
+Invoices for all past payments are available for download directly from your account. To access them, log in and navigate to Settings > Billing > Payment History. Each transaction listed will have a corresponding "Download Invoice" link that generates a PDF copy of the invoice for that billing period.
+
+Invoices include your billing details, the description of services charged, the amount paid, applicable taxes, and your company information if it has been added under Settings > Billing > Billing Information. To ensure invoices reflect the correct company name, address, and tax ID, update this information before your next billing cycle, as past invoices cannot be regenerated with new details.
+
+If you need invoices for multiple billing periods at once, you can use the "Export All" button at the top of the Payment History page to download a ZIP file containing all available invoices. For accounting purposes, invoices are retained for up to 7 years.

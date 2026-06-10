@@ -1,0 +1,7 @@
+Title: How to Transfer Account Ownership
+
+If you need to transfer ownership of your account—for example, when an employee leaves a company or a project changes hands—you can do so from Settings > Account > Ownership Transfer. This feature is available for team and business plans.
+
+To start a transfer, enter the email address of the person who will become the new owner. They must already have an account with us or create one to accept the transfer. The recipient will receive an email with a confirmation link, which they must click within 7 days to accept ownership.
+
+Once accepted, the new owner gains full administrative control, including billing management, member permissions, and the ability to delete the account. The previous owner is automatically demoted to an administrator role unless removed by the new owner. Ownership transfers cannot be reversed automatically, so ensure you are transferring to a trusted individual before confirming the request.

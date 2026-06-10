@@ -1,0 +1,7 @@
+Title: How to Dispute Unauthorized Charges
+
+If you notice a charge on your account or payment statement that you did not authorize, please act quickly to report it. First, check Settings > Billing > Payment History to confirm the charge was not made by a team member or an automatic renewal you may have forgotten about.
+
+If the charge remains unrecognized, submit a dispute by going to Settings > Billing > Payment History, selecting the charge, and clicking "Dispute Charge." Provide as much detail as possible, including the date you noticed the charge and whether your account credentials may have been compromised.
+
+This type of request is treated as a priority escalation and is routed to our fraud and billing investigations team, who will respond within 24-48 hours. As a precaution, we recommend changing your password and enabling two-factor authentication immediately. While the dispute is investigated, we may temporarily restrict account access to prevent further unauthorized activity. Confirmed unauthorized charges will be fully refunded.

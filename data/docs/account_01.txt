@@ -1,0 +1,7 @@
+Title: How to Update Your Email Address
+
+Your email address is used for account notifications, password resets, and login, so it's important to keep it current. To update it, log in and go to Settings > Account > Email Address. Enter your new email address and click "Save Changes."
+
+For security purposes, we will send a verification link to the new email address. Your email will not be updated until you click this link to confirm ownership. You will also receive a notification at your old email address informing you of the change request, in case you did not initiate it.
+
+The verification link expires after 24 hours. If it expires before you click it, simply repeat the process to receive a new link. Until verification is complete, your account will continue using the previous email address for login and notifications. If you no longer have access to your old email and cannot complete this process, contact support for identity verification assistance.

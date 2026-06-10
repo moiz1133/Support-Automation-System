@@ -1,0 +1,7 @@
+Title: How to Clear Cache and Cookies
+
+If you're experiencing issues such as pages not loading correctly, outdated information appearing, or login problems, clearing your browser's cache and cookies often resolves the issue. This removes temporarily stored data that may be conflicting with the current version of our site.
+
+In most browsers, you can access these settings through the browser menu under "Privacy" or "History." For Chrome, go to Settings > Privacy and Security > Clear Browsing Data, select "Cookies and other site data" and "Cached images and files," choose a time range such as "All time," and click "Clear Data." For Firefox, go to Settings > Privacy & Security > Cookies and Site Data, and click "Clear Data."
+
+After clearing your cache and cookies, you will be logged out of all websites, including ours, so you'll need to sign in again. If problems persist after clearing cache, try restarting your browser completely or testing in a private/incognito window.
