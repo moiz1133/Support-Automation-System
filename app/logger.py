@@ -14,6 +14,8 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
         log_record["module"] = record.module
         if "event" not in log_record:
             log_record["event"] = record.getMessage()
+        if "doc_filename" in log_record:
+            log_record["filename"] = log_record.pop("doc_filename")
 
 
 def get_logger(name: str) -> logging.Logger:
