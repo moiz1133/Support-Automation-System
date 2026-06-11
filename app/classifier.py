@@ -1,9 +1,11 @@
 import json
 
+import openai
 from openai import OpenAI
 
 from app.config import settings
 from app.cost_tracker import RequestCostTracker
+from app.errors import ClassificationError
 from app.logger import get_logger
 
 logger = get_logger(__name__)
@@ -23,29 +25,43 @@ SYSTEM_PROMPT = (
 
 def classify(query: str, tracker: RequestCostTracker) -> dict:
     client = OpenAI(api_key=settings.openai_api_key)
-    response = client.chat.completions.create(
-        model=CLASSIFIER_MODEL,
-        temperature=0,
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": query},
-        ],
-    )
 
     try:
-        parsed = json.loads(response.choices[0].message.content)
+        response = client.chat.completions.create(
+            model=CLASSIFIER_MODEL,
+            temperature=0,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": query},
+            ],
+        )
+    except openai.APIError as exc:
+        logger.warning(
+            "classification_error",
+            extra={"event": "classification_error", "raw_response": None, "error_message": str(exc)},
+        )
+        raise ClassificationError(str(exc)) from exc
+
+    raw_content = response.choices[0].message.content
+
+    try:
+        parsed = json.loads(raw_content)
         result = {
             "intent": parsed["intent"],
             "confidence": float(parsed["confidence"]),
             "reason": parsed["reason"],
         }
-    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
-        result = {
-            "intent": "escalate",
-            "confidence": 0.0,
-            "reason": "classification parse error",
-        }
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        logger.warning(
+            "classification_error",
+            extra={
+                "event": "classification_error",
+                "raw_response": raw_content,
+                "error_message": str(exc),
+            },
+        )
+        raise ClassificationError("classification parse error") from exc
 
     usage = response.usage
     result["prompt_tokens"] = usage.prompt_tokens
