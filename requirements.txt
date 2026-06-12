@@ -8,3 +8,4 @@ python-dotenv
 tenacity
 pytest
 httpx
+requests
