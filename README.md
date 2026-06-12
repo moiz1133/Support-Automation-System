@@ -73,6 +73,13 @@ A scaffold for an AI-powered customer support automation service. It exposes a F
                    escalated, usage}
 ```
 
+## Monitoring
+
+- `GET /health` — returns `{status: "ok" | "degraded", checks: {vector_db, openai_configured, uptime_seconds}}`. `vector_db` is checked with a lightweight ChromaDB connectivity probe (no embedding call); `openai_configured` only checks that an API key is set, it does not make a live call.
+- `GET /monitor` — returns aggregate stats (`summary`) and the last 100 requests (`recent_requests`, newest first), tracked in an in-memory `deque` that resets on restart.
+
+**Known tradeoff:** `/health` and `/monitor` require no authentication. This is acceptable for this project's current scope but should be locked down (e.g. behind a reverse proxy, IP allowlist, or auth middleware) before any production/public deployment, since `/monitor` exposes query previews and cost data.
+
 ## Running tests
 
 All OpenAI calls are mocked, so the test suite makes no real API requests:

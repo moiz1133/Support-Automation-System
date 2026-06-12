@@ -1,6 +1,7 @@
 import logging
 import time
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -19,7 +20,8 @@ from app.errors import (
 )
 from app.llm import generate_answer
 from app.logger import get_logger
-from app.retrieval import retrieve
+from app.monitor import get_recent, get_summary, get_uptime_seconds, record_request
+from app.retrieval import check_vector_db, retrieve
 
 logger = get_logger(__name__)
 
@@ -63,7 +65,60 @@ async def on_startup() -> None:
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    try:
+        check_vector_db(settings.chroma_db_path)
+        vector_db_status = "ok"
+    except VectorDBError:
+        vector_db_status = "error"
+
+    openai_configured = bool(settings.openai_api_key)
+    status = "ok" if vector_db_status == "ok" and openai_configured else "degraded"
+
+    return {
+        "status": status,
+        "checks": {
+            "vector_db": vector_db_status,
+            "openai_configured": openai_configured,
+            "uptime_seconds": get_uptime_seconds(),
+        },
+    }
+
+
+@app.get("/monitor")
+async def monitor() -> dict:
+    return {
+        "summary": get_summary(),
+        "recent_requests": get_recent(),
+    }
+
+
+def _record_request_metrics(
+    request_id: str,
+    query: str,
+    latency_ms: int,
+    intent: str,
+    confidence: float,
+    escalated: bool,
+    total_tokens: int,
+    total_cost_usd: float,
+    error: bool,
+    error_type: str | None,
+) -> None:
+    record_request(
+        {
+            "request_id": request_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "query_preview": query[:60],
+            "intent": intent,
+            "confidence": confidence,
+            "escalated": escalated,
+            "latency_ms": latency_ms,
+            "total_tokens": total_tokens,
+            "total_cost_usd": total_cost_usd,
+            "error": error,
+            "error_type": error_type,
+        }
+    )
 
 
 def _error_response(error_type: type[Exception], fallback_answer: str) -> QueryResponse:
@@ -139,6 +194,19 @@ async def query(request: QueryRequest) -> QueryResponse:
             },
         )
 
+        _record_request_metrics(
+            request_id=request_id,
+            query=request.query,
+            latency_ms=latency_ms,
+            intent=intent,
+            confidence=confidence,
+            escalated=escalated,
+            total_tokens=summary["total_tokens"],
+            total_cost_usd=summary["total_cost_usd"],
+            error=False,
+            error_type=None,
+        )
+
         return QueryResponse(
             answer=answer,
             sources=sources,
@@ -155,9 +223,33 @@ async def query(request: QueryRequest) -> QueryResponse:
     except HANDLED_ERRORS as exc:
         latency_ms = round((time.perf_counter() - start) * 1000)
         _log_request_failed(logging.ERROR, request_id, type(exc).__name__, str(exc), latency_ms)
+        _record_request_metrics(
+            request_id=request_id,
+            query=request.query,
+            latency_ms=latency_ms,
+            intent="unknown",
+            confidence=0.0,
+            escalated=True,
+            total_tokens=0,
+            total_cost_usd=0.0,
+            error=True,
+            error_type=type(exc).__name__,
+        )
         return _error_response(type(exc), FALLBACK_RESPONSES[type(exc)])
 
     except Exception as exc:
         latency_ms = round((time.perf_counter() - start) * 1000)
         _log_request_failed(logging.CRITICAL, request_id, type(exc).__name__, str(exc), latency_ms)
+        _record_request_metrics(
+            request_id=request_id,
+            query=request.query,
+            latency_ms=latency_ms,
+            intent="unknown",
+            confidence=0.0,
+            escalated=True,
+            total_tokens=0,
+            total_cost_usd=0.0,
+            error=True,
+            error_type=type(exc).__name__,
+        )
         return _error_response(type(exc), "Something went wrong on our end. Please try again or contact support.")

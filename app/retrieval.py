@@ -10,6 +10,15 @@ from app.logger import get_logger
 logger = get_logger(__name__)
 
 
+def check_vector_db(db_path: str) -> None:
+    try:
+        client = chromadb.PersistentClient(path=db_path)
+        collection = client.get_or_create_collection(name="support_docs")
+        collection.count()
+    except Exception as exc:
+        raise VectorDBError("Vector DB unavailable") from exc
+
+
 def retrieve(query: str, db_path: str, tracker: RequestCostTracker, n_results: int = 3) -> list[dict]:
     openai_client = OpenAI(api_key=settings.openai_api_key)
 
