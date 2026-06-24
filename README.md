@@ -44,24 +44,49 @@ telling the user a human will follow up.
                                     |
                                     v
                           Structured JSON Response
-                {answer, sources, intent, confidence,
+                {answer, sources, intent, category, confidence,
                        escalated, error, usage}
 ```
 
 Component descriptions:
 
 - **Classifier** (`app/classifier.py`) — single LLM call (gpt-3.5-turbo, `response_format=json_object`)
-  that returns `{intent, confidence, reason}`; intent is one of `answerable`, `escalate`, `needs_more_info`.
+  that returns `{intent, confidence, reason, category}`; intent is one of `answerable`, `escalate`,
+  `needs_more_info`; category is one of `billing`, `technical`, `account`, `escalation`, `unknown`.
 - **Router** (`app/main.py`) — demotes `answerable` to `needs_more_info` if `confidence < 0.6`; routes
   `escalate` and `needs_more_info` directly to a canned response with no retrieval or generation.
 - **Retrieval** (`app/retrieval.py`) — embeds the query (`text-embedding-3-large`), queries ChromaDB for
-  the top 3 chunks, and returns their content, source filename, and category.
+  the top 3 chunks (optionally pre-filtered by category — see "Metadata Filtering" below), and returns
+  their content, source filename, and category.
 - **ChromaDB** — local persistent vector store under `data/chroma/`, populated by `scripts/ingest.py`.
 - **Generation** (`app/llm.py`) — gpt-3.5-turbo call grounded in the retrieved chunks, with a 25s timeout
   and tenacity-based retry on rate limits / connection errors.
 - **OpenAI API** — used for embeddings, classification, and generation chat completions.
 - **Cost Tracker** (`app/cost_tracker.py`) — accumulates prompt/completion tokens and cost-per-model
   across all calls in a request, returned in the response `usage` field and logged as `request_complete`.
+
+### Metadata Filtering
+
+Every chunk stored in ChromaDB already carries a `category` metadata field, assigned at ingestion time
+from the document's filename prefix (`billing_`, `technical_`, `account_`, `escalation_`). The
+classifier (`app/classifier.py`) now detects the same category from the query text as a side effect of
+its single intent-classification call — no extra LLM call is made.
+
+That category is passed into `retrieve()` (`app/retrieval.py`) as a ChromaDB `where={"category": {"$eq":
+category}}` filter, which narrows the candidate set *before* vector similarity runs, so a "billing"
+query never competes against "technical" chunks for the top-3 slots.
+
+Flow:
+1. If the classifier returns `category: "unknown"` (or filtering isn't requested), `retrieve()` runs an
+   unfiltered query exactly as before.
+2. If a known category is given and the filtered query returns **zero** results, `retrieve()`
+   automatically falls back to an unfiltered query and logs a `category_filter_fallback` event — the
+   caller never sees an empty result just because a category happens to have no matching content yet.
+3. If the filtered query returns **fewer than `n_results`** but at least one match, those results are
+   returned as-is (no fallback) — a smaller, more relevant set beats padding it with off-category chunks.
+
+This fallback is silent to the API caller: the response shape is identical whether or not a filter was
+applied internally.
 
 ## Project Structure
 
@@ -152,6 +177,7 @@ HTTP 200, even on internal failures — see `app/errors.py` for the fallback res
   "answer": "string",
   "sources": ["string"],
   "intent": "answerable | escalate | needs_more_info | unknown",
+  "category": "billing | technical | account | escalation | unknown",
   "confidence": 0.0,
   "escalated": false,
   "error": false,
@@ -179,6 +205,7 @@ curl -X POST http://127.0.0.1:8000/query \
   "answer": "If you've forgotten your password or want to change it for security reasons, you can reset it from the login page. Click \"Forgot Password?\" below the login form, enter the email address associated with your account, and click \"Send Reset Link.\" You will receive an email containing a secure link to reset your password.",
   "sources": ["technical_01.txt"],
   "intent": "answerable",
+  "category": "technical",
   "confidence": 1.0,
   "escalated": false,
   "error": false,
@@ -211,6 +238,7 @@ No request body.
     "avg_tokens": 0.0,
     "total_cost_usd": 0.0,
     "intent_breakdown": {"answerable": 0, "escalate": 0, "needs_more_info": 0, "unknown": 0},
+    "category_breakdown": {"billing": 0, "technical": 0, "account": 0, "escalation": 0, "unknown": 0},
     "avg_confidence": 0.0
   },
   "recent_requests": [
@@ -219,6 +247,7 @@ No request body.
       "timestamp": "ISO-8601 string",
       "query_preview": "string",
       "intent": "string",
+      "category": "string",
       "confidence": 0.0,
       "escalated": false,
       "latency_ms": 0,
@@ -248,6 +277,7 @@ curl http://127.0.0.1:8000/monitor
     "avg_tokens": 298.0,
     "total_cost_usd": 0.000001,
     "intent_breakdown": {"answerable": 1, "escalate": 1, "needs_more_info": 0, "unknown": 0},
+    "category_breakdown": {"billing": 0, "technical": 1, "account": 0, "escalation": 1, "unknown": 0},
     "avg_confidence": 1.0
   },
   "recent_requests": [
@@ -256,6 +286,7 @@ curl http://127.0.0.1:8000/monitor
       "timestamp": "2026-06-12T04:18:08.121160+00:00",
       "query_preview": "Someone made unauthorized charges on my account",
       "intent": "escalate",
+      "category": "escalation",
       "confidence": 1.0,
       "escalated": true,
       "latency_ms": 2539,
@@ -269,6 +300,7 @@ curl http://127.0.0.1:8000/monitor
       "timestamp": "2026-06-12T04:18:05.219116+00:00",
       "query_preview": "How do I reset my password?",
       "intent": "answerable",
+      "category": "technical",
       "confidence": 1.0,
       "escalated": false,
       "latency_ms": 10284,
@@ -318,16 +350,20 @@ curl http://127.0.0.1:8000/health
 ## Eval
 
 `scripts/eval.py` sends 10 hardcoded test queries to a running server and scores each response on
-three dimensions:
+four dimensions:
 
 - **format_score** (0.0–1.0): checks the response has a non-empty `answer` between 10 and 600
   characters, a valid `intent`, and a `usage.total_tokens` field. 0.25 per check.
 - **relevance_score** (0.0–1.0): fraction of expected keywords (e.g. `"password"`, `"reset"`, `"email"`)
   found (case-insensitive) in the `answer` text.
 - **intent_score** (0.0 or 1.0): whether the returned `intent` matches the expected intent for that query.
+- **category_score** (0.0 or 1.0): whether the returned `category` matches the expected category for
+  that query — this is what catches a regression in the metadata filter (e.g. a billing question
+  getting classified/retrieved as technical).
 
-`composite_score` is the mean of the three. The script prints an overall summary, a per-case table,
-and a list of cases with `composite_score < 0.5`, then writes full results to `eval_results.json`.
+`composite_score` is the mean of the four. The script prints an overall summary (including
+`Avg category`), a per-case table, and a list of cases with `composite_score < 0.5`, then writes full
+results to `eval_results.json`.
 
 **How to run** (server must already be running on `localhost:8000`):
 ```bash

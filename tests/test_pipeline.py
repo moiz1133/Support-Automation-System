@@ -79,41 +79,82 @@ def test_retrieval_returns_top_3(chroma_db_path):
         assert "distance" in chunk
 
 
+def test_retrieval_category_filter_returns_matching_sources(chroma_db_path):
+    tracker = RequestCostTracker("test-retrieval-category")
+
+    with patch("app.retrieval.OpenAI") as mock_openai_cls:
+        mock_openai_cls.return_value.embeddings.create.return_value = make_embedding_response(1)
+        results = retrieve("How do I reset my password?", chroma_db_path, tracker, category="technical")
+
+    assert len(results) > 0
+    for chunk in results:
+        assert chunk["category"] == "technical"
+
+
+def test_retrieval_category_filter_falls_back_on_no_matches(chroma_db_path):
+    tracker = RequestCostTracker("test-retrieval-category-fallback")
+
+    with patch("app.retrieval.OpenAI") as mock_openai_cls:
+        mock_openai_cls.return_value.embeddings.create.return_value = make_embedding_response(1)
+        results = retrieve("How do I reset my password?", chroma_db_path, tracker, category="nonexistent_category")
+
+    assert len(results) == 3
+
+
 def test_classification_answerable():
     tracker = RequestCostTracker("test-classify-answerable")
 
     with patch("app.classifier.OpenAI") as mock_openai_cls:
         mock_openai_cls.return_value.chat.completions.create.return_value = make_chat_response(
-            json.dumps({"intent": "answerable", "confidence": 0.9, "reason": "Documented process"})
+            json.dumps(
+                {"intent": "answerable", "confidence": 0.9, "reason": "Documented process", "category": "billing"}
+            )
         )
         result = classify("How do I cancel my subscription?", tracker)
 
     assert result["intent"] == "answerable"
+    assert result["category"] == "billing"
 
 
 def test_classification_escalate():
     with patch("app.classifier.OpenAI") as mock_openai_cls:
         mock_openai_cls.return_value.chat.completions.create.return_value = make_chat_response(
-            json.dumps({"intent": "escalate", "confidence": 0.95, "reason": "Possible unauthorized access"})
+            json.dumps(
+                {
+                    "intent": "escalate",
+                    "confidence": 0.95,
+                    "reason": "Possible unauthorized access",
+                    "category": "escalation",
+                }
+            )
         )
         response = client.post("/query", json={"query": "Someone accessed my account"})
 
     assert response.status_code == 200
     data = response.json()
     assert data["escalated"] is True
+    assert data["category"] == "escalation"
     assert "human support" in data["answer"]
 
 
 def test_classification_low_confidence_demotes():
     with patch("app.classifier.OpenAI") as mock_openai_cls:
         mock_openai_cls.return_value.chat.completions.create.return_value = make_chat_response(
-            json.dumps({"intent": "answerable", "confidence": 0.4, "reason": "Too vague to resolve directly"})
+            json.dumps(
+                {
+                    "intent": "answerable",
+                    "confidence": 0.4,
+                    "reason": "Too vague to resolve directly",
+                    "category": "unknown",
+                }
+            )
         )
         response = client.post("/query", json={"query": "It's broken"})
 
     assert response.status_code == 200
     data = response.json()
     assert data["intent"] == "needs_more_info"
+    assert data["category"] == "unknown"
 
 
 def test_cost_tracker_sums_correctly():
@@ -140,7 +181,14 @@ def test_full_query_endpoint(chroma_db_path, monkeypatch):
             patch("app.llm.OpenAI") as mock_llm_openai:
 
         mock_classifier_openai.return_value.chat.completions.create.return_value = make_chat_response(
-            json.dumps({"intent": "answerable", "confidence": 0.95, "reason": "Documented process"})
+            json.dumps(
+                {
+                    "intent": "answerable",
+                    "confidence": 0.95,
+                    "reason": "Documented process",
+                    "category": "technical",
+                }
+            )
         )
         mock_retrieval_openai.return_value.embeddings.create.return_value = make_embedding_response(1)
         mock_llm_openai.return_value.chat.completions.create.return_value = make_chat_response(
@@ -154,5 +202,7 @@ def test_full_query_endpoint(chroma_db_path, monkeypatch):
     assert "answer" in data
     assert "sources" in data
     assert "intent" in data
+    assert data["category"] == "technical"
+    assert all(source.startswith("technical_") for source in data["sources"])
     assert "total_tokens" in data["usage"]
     assert "total_cost_usd" in data["usage"]

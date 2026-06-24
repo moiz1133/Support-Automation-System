@@ -51,6 +51,7 @@ class QueryResponse(BaseModel):
     answer: str
     sources: list[str]
     intent: str
+    category: str
     confidence: float
     escalated: bool
     error: bool = False
@@ -97,6 +98,7 @@ def _record_request_metrics(
     query: str,
     latency_ms: int,
     intent: str,
+    category: str,
     confidence: float,
     escalated: bool,
     total_tokens: int,
@@ -110,6 +112,7 @@ def _record_request_metrics(
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "query_preview": query[:60],
             "intent": intent,
+            "category": category,
             "confidence": confidence,
             "escalated": escalated,
             "latency_ms": latency_ms,
@@ -126,6 +129,7 @@ def _error_response(error_type: type[Exception], fallback_answer: str) -> QueryR
         answer=fallback_answer,
         sources=[],
         intent="unknown",
+        category="unknown",
         confidence=0.0,
         escalated=True,
         error=True,
@@ -158,6 +162,7 @@ async def query(request: QueryRequest) -> QueryResponse:
         classification = classify(request.query, tracker)
         intent = classification["intent"]
         confidence = classification["confidence"]
+        category = classification["category"]
 
         if intent == "answerable" and confidence < CONFIDENCE_THRESHOLD:
             intent = "needs_more_info"
@@ -171,7 +176,7 @@ async def query(request: QueryRequest) -> QueryResponse:
             sources = []
             escalated = False
         else:
-            chunks = retrieve(request.query, settings.chroma_db_path, tracker)
+            chunks = retrieve(request.query, settings.chroma_db_path, tracker, category=category)
             result = await generate_answer(request.query, chunks, tracker)
             answer = result["answer"]
             sources = sorted({chunk["filename"] for chunk in chunks})
@@ -186,6 +191,7 @@ async def query(request: QueryRequest) -> QueryResponse:
                 "event": "request_complete",
                 "request_id": request_id,
                 "intent": intent,
+                "category": category,
                 "escalated": escalated,
                 "total_tokens": summary["total_tokens"],
                 "total_cost_usd": summary["total_cost_usd"],
@@ -199,6 +205,7 @@ async def query(request: QueryRequest) -> QueryResponse:
             query=request.query,
             latency_ms=latency_ms,
             intent=intent,
+            category=category,
             confidence=confidence,
             escalated=escalated,
             total_tokens=summary["total_tokens"],
@@ -211,6 +218,7 @@ async def query(request: QueryRequest) -> QueryResponse:
             answer=answer,
             sources=sources,
             intent=intent,
+            category=category,
             confidence=confidence,
             escalated=escalated,
             usage=UsageSummary(
@@ -228,6 +236,7 @@ async def query(request: QueryRequest) -> QueryResponse:
             query=request.query,
             latency_ms=latency_ms,
             intent="unknown",
+            category="unknown",
             confidence=0.0,
             escalated=True,
             total_tokens=0,
@@ -245,6 +254,7 @@ async def query(request: QueryRequest) -> QueryResponse:
             query=request.query,
             latency_ms=latency_ms,
             intent="unknown",
+            category="unknown",
             confidence=0.0,
             escalated=True,
             total_tokens=0,

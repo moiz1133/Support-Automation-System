@@ -19,7 +19,13 @@ def check_vector_db(db_path: str) -> None:
         raise VectorDBError("Vector DB unavailable") from exc
 
 
-def retrieve(query: str, db_path: str, tracker: RequestCostTracker, n_results: int = 3) -> list[dict]:
+def retrieve(
+    query: str,
+    db_path: str,
+    tracker: RequestCostTracker,
+    n_results: int = 3,
+    category: str | None = None,
+) -> list[dict]:
     openai_client = OpenAI(api_key=settings.openai_api_key)
 
     try:
@@ -48,15 +54,40 @@ def retrieve(query: str, db_path: str, tracker: RequestCostTracker, n_results: i
         )
         raise VectorDBError("Vector DB unavailable") from exc
 
+    use_filter = category is not None and category != "unknown"
+    where_filter = {"category": {"$eq": category}} if use_filter else None
+
     try:
         collection = client.get_or_create_collection(name="support_docs")
-        results = collection.query(query_embeddings=[embedding], n_results=n_results)
+        results = collection.query(query_embeddings=[embedding], n_results=n_results, where=where_filter)
     except Exception as exc:
         logger.warning(
             "vector_db_error",
             extra={"event": "vector_db_error", "error_message": str(exc), "query_preview": query[:60]},
         )
         raise VectorDBError("Vector DB query failed") from exc
+
+    filtered = use_filter
+
+    if use_filter and len(results["documents"][0]) == 0:
+        logger.warning(
+            "category_filter_fallback",
+            extra={
+                "event": "category_filter_fallback",
+                "category": category,
+                "query_preview": query[:60],
+                "reason": "no results with filter",
+            },
+        )
+        try:
+            results = collection.query(query_embeddings=[embedding], n_results=n_results)
+        except Exception as exc:
+            logger.warning(
+                "vector_db_error",
+                extra={"event": "vector_db_error", "error_message": str(exc), "query_preview": query[:60]},
+            )
+            raise VectorDBError("Vector DB query failed") from exc
+        filtered = False
 
     documents = results["documents"][0]
     metadatas = results["metadatas"][0]
@@ -79,6 +110,8 @@ def retrieve(query: str, db_path: str, tracker: RequestCostTracker, n_results: i
             "query_preview": query[:60],
             "chunks_returned": len(chunks),
             "top_distance": distances[0] if distances else None,
+            "category_filter": category if category else "none",
+            "filtered": filtered,
         },
     )
     return chunks

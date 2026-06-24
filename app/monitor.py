@@ -11,6 +11,7 @@ MAX_RECORDS = 100
 _start_time = time.monotonic()
 
 INTENTS = ("answerable", "escalate", "needs_more_info", "unknown")
+CATEGORIES = ("billing", "technical", "account", "escalation", "unknown")
 
 
 @dataclass
@@ -19,6 +20,7 @@ class RequestRecord:
     timestamp: str
     query_preview: str
     intent: str
+    category: str
     confidence: float
     escalated: bool
     latency_ms: int
@@ -38,6 +40,7 @@ def record_request(data: dict) -> None:
             timestamp=data["timestamp"],
             query_preview=data["query_preview"],
             intent=data["intent"],
+            category=data["category"],
             confidence=data["confidence"],
             escalated=data["escalated"],
             latency_ms=data["latency_ms"],
@@ -65,6 +68,7 @@ def get_summary() -> dict:
     total_requests = len(records)
 
     intent_breakdown = {intent: 0 for intent in INTENTS}
+    category_breakdown = {category: 0 for category in CATEGORIES}
 
     if total_requests == 0:
         return {
@@ -76,6 +80,7 @@ def get_summary() -> dict:
             "avg_tokens": 0.0,
             "total_cost_usd": 0.0,
             "intent_breakdown": intent_breakdown,
+            "category_breakdown": category_breakdown,
             "avg_confidence": 0.0,
         }
 
@@ -90,6 +95,7 @@ def get_summary() -> dict:
 
     for r in records:
         intent_breakdown[r.intent] = intent_breakdown.get(r.intent, 0) + 1
+        category_breakdown[r.category] = category_breakdown.get(r.category, 0) + 1
 
     return {
         "total_requests": total_requests,
@@ -100,6 +106,7 @@ def get_summary() -> dict:
         "avg_tokens": round(sum(r.total_tokens for r in records) / total_requests, 2),
         "total_cost_usd": round(sum(r.total_cost_usd for r in records), 6),
         "intent_breakdown": intent_breakdown,
+        "category_breakdown": category_breakdown,
         "avg_confidence": round(sum(r.confidence for r in records) / total_requests, 4),
     }
 

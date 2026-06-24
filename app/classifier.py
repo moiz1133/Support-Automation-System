@@ -12,14 +12,25 @@ logger = get_logger(__name__)
 
 CLASSIFIER_MODEL = "gpt-3.5-turbo"
 
+CATEGORIES = ("billing", "technical", "account", "escalation", "unknown")
+
 SYSTEM_PROMPT = (
-    "Classify the user support query into exactly one of these three categories:\n"
+    "Classify the user support query into exactly one of these three intents:\n"
     "  answerable      - can be resolved with documentation\n"
     "  escalate        - sensitive: security, legal, fraud, abuse, unauthorized charges\n"
     "  needs_more_info - too vague to answer without clarification\n"
+    "\n"
+    "Also classify the query into exactly one of these document categories:\n"
+    "  billing    - payment, invoice, refund, subscription, charge\n"
+    "  technical  - password, API, install, cache, 2FA, error, broken\n"
+    "  account    - email, username, delete account, ownership, notifications\n"
+    "  escalation - security, fraud, unauthorized, legal, abuse, vulnerability, compliance\n"
+    "  unknown    - cannot determine the category from the query\n"
+    "\n"
     "Respond ONLY with valid JSON:\n"
     '{"intent": "answerable" | "escalate" | "needs_more_info", '
-    '"confidence": 0.0-1.0, "reason": "one sentence"}'
+    '"confidence": 0.0-1.0, "reason": "one sentence", '
+    '"category": "billing" | "technical" | "account" | "escalation" | "unknown"}'
 )
 
 
@@ -47,10 +58,14 @@ def classify(query: str, tracker: RequestCostTracker) -> dict:
 
     try:
         parsed = json.loads(raw_content)
+        category = parsed.get("category", "unknown")
+        if category not in CATEGORIES:
+            category = "unknown"
         result = {
             "intent": parsed["intent"],
             "confidence": float(parsed["confidence"]),
             "reason": parsed["reason"],
+            "category": category,
         }
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         logger.warning(
@@ -83,6 +98,7 @@ def classify(query: str, tracker: RequestCostTracker) -> dict:
             "intent": result["intent"],
             "confidence": result["confidence"],
             "reason": result["reason"],
+            "category": result["category"],
             "query_preview": query[:60],
         },
     )

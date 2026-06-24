@@ -13,60 +13,70 @@ TEST_CASES = [
     {
         "query": "How do I reset my password?",
         "expected_intent": "answerable",
+        "expected_category": "technical",
         "relevance_hints": ["password", "reset", "email"],
         "should_escalate": False,
     },
     {
         "query": "How do I cancel my subscription?",
         "expected_intent": "answerable",
+        "expected_category": "billing",
         "relevance_hints": ["cancel", "subscription", "billing"],
         "should_escalate": False,
     },
     {
         "query": "Someone made unauthorized charges on my account",
         "expected_intent": "escalate",
+        "expected_category": "escalation",
         "relevance_hints": ["human", "support", "agent"],
         "should_escalate": True,
     },
     {
         "query": "How do I enable two-factor authentication?",
         "expected_intent": "answerable",
+        "expected_category": "technical",
         "relevance_hints": ["two-factor", "2fa", "security"],
         "should_escalate": False,
     },
     {
         "query": "It's not working",
         "expected_intent": "needs_more_info",
+        "expected_category": "unknown",
         "relevance_hints": ["details", "more information"],
         "should_escalate": False,
     },
     {
         "query": "How do I download my invoice?",
         "expected_intent": "answerable",
+        "expected_category": "billing",
         "relevance_hints": ["invoice", "billing", "download"],
         "should_escalate": False,
     },
     {
         "query": "I want to report a security vulnerability",
         "expected_intent": "escalate",
+        "expected_category": "escalation",
         "relevance_hints": ["human", "support", "team"],
         "should_escalate": True,
     },
     {
         "query": "How do I transfer account ownership?",
         "expected_intent": "answerable",
+        "expected_category": "account",
         "relevance_hints": ["transfer", "ownership", "account"],
         "should_escalate": False,
     },
     {
         "query": "Help",
         "expected_intent": "needs_more_info",
+        "expected_category": "unknown",
         "relevance_hints": ["details", "more information"],
         "should_escalate": False,
     },
     {
         "query": "How do I connect via API?",
         "expected_intent": "answerable",
+        "expected_category": "technical",
         "relevance_hints": ["api", "curl", "endpoint"],
         "should_escalate": False,
     },
@@ -103,6 +113,10 @@ def intent_score(actual: str, expected: str) -> float:
     return 1.0 if actual == expected else 0.0
 
 
+def category_score(actual: str | None, expected: str) -> float:
+    return 1.0 if actual == expected else 0.0
+
+
 def run_case(case_id: int, case: dict) -> dict:
     query = case["query"]
 
@@ -116,7 +130,10 @@ def run_case(case_id: int, case: dict) -> dict:
             "query": query,
             "expected_intent": case["expected_intent"],
             "actual_intent": None,
+            "expected_category": case["expected_category"],
+            "actual_category": None,
             "intent_score": 0.0,
+            "category_score": 0.0,
             "format_score": 0.0,
             "relevance_score": 0.0,
             "composite_score": 0.0,
@@ -132,7 +149,10 @@ def run_case(case_id: int, case: dict) -> dict:
             "query": query,
             "expected_intent": case["expected_intent"],
             "actual_intent": None,
+            "expected_category": case["expected_category"],
+            "actual_category": None,
             "intent_score": 0.0,
+            "category_score": 0.0,
             "format_score": 0.0,
             "relevance_score": 0.0,
             "composite_score": 0.0,
@@ -145,18 +165,23 @@ def run_case(case_id: int, case: dict) -> dict:
     body = response.json()
     answer = body.get("answer", "") or ""
     actual_intent = body.get("intent")
+    actual_category = body.get("category")
 
     f_score = format_score(body)
     r_score = relevance_score(answer, case["relevance_hints"])
     i_score = intent_score(actual_intent, case["expected_intent"])
-    composite = round((f_score + r_score + i_score) / 3, 2)
+    c_score = category_score(actual_category, case["expected_category"])
+    composite = round((f_score + r_score + i_score + c_score) / 4, 2)
 
     return {
         "case_id": case_id,
         "query": query,
         "expected_intent": case["expected_intent"],
         "actual_intent": actual_intent,
+        "expected_category": case["expected_category"],
+        "actual_category": actual_category,
         "intent_score": i_score,
+        "category_score": c_score,
         "format_score": f_score,
         "relevance_score": r_score,
         "composite_score": composite,
@@ -172,6 +197,7 @@ def print_report(results: list[dict]) -> None:
     avg_format = round(sum(r["format_score"] for r in results) / total, 2)
     avg_relevance = round(sum(r["relevance_score"] for r in results) / total, 2)
     avg_intent = round(sum(r["intent_score"] for r in results) / total, 2)
+    avg_category = round(sum(r["category_score"] for r in results) / total, 2)
     avg_composite = round(sum(r["composite_score"] for r in results) / total, 2)
 
     latencies = [r["latency_ms"] for r in results if r["latency_ms"] is not None]
@@ -183,19 +209,24 @@ def print_report(results: list[dict]) -> None:
     print(f"  Avg format     : {avg_format:.2f}")
     print(f"  Avg relevance  : {avg_relevance:.2f}")
     print(f"  Avg intent     : {avg_intent:.2f}")
+    print(f"  Avg category   : {avg_category:.2f}")
     print(f"  Avg composite  : {avg_composite:.2f}")
     print(f"  Avg latency    : {avg_latency}ms")
     print(f"  Failed requests: {failed_count}")
     print()
 
     print("PER CASE")
-    print(f"  {'id':<3} | {'query':<30} | {'intent':<15} | {'format':<6} | {'relevance':<9} | {'composite':<9} | ms")
+    print(
+        f"  {'id':<3} | {'query':<30} | {'intent':<15} | {'category':<10} | "
+        f"{'format':<6} | {'relevance':<9} | {'composite':<9} | ms"
+    )
     for r in results:
         query_trunc = r["query"][:30]
         actual_intent = r["actual_intent"] or "N/A"
+        actual_category = r["actual_category"] or "N/A"
         latency = r["latency_ms"] if r["latency_ms"] is not None else "N/A"
         print(
-            f"  {r['case_id']:<3} | {query_trunc:<30} | {actual_intent:<15} | "
+            f"  {r['case_id']:<3} | {query_trunc:<30} | {actual_intent:<15} | {actual_category:<10} | "
             f"{r['format_score']:<6.2f} | {r['relevance_score']:<9.2f} | {r['composite_score']:<9.2f} | {latency}"
         )
     print()
